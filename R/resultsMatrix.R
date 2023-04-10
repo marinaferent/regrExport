@@ -1,0 +1,157 @@
+#' Exports lm, plm and glmer regression's coefficient and the statistical measure of preference in parenthesis.
+#'
+#' @param x An object of class lm, plm, coeftest, or subclass glmerMod. If x is an object of class coeftest, use x.coeftest=TRUE.
+#' @param z Specifies the measure for statistical significance. Options are "stderr", "tstat", and "pvalue". The default is "stderr".
+#' @param decim Specifies the number of decimals to display. The default is 4.
+#' @param bRes Specifies the bootstraped model. An object of S3 class - result of bootMer(). If provided, the function will return the (t-stat, or p-value based on) boodstrapped standard errors.
+#' @param x.coeftest logical. The default is 'FALSE'. If x is an object of class coeftest, use x.coeftest=TRUE.
+#' @returns An n x 1 matrix with the coefficient, number of stars, and the statistical measure of preference in parenthesis. Works with bootstrapped standard errors in case of glmerMod class objects. Significance stars follow the social sciences standards.
+#' The rownames are the variable names.
+#' @references
+#' Croissant, Y. et al.(2022), Package ‘plm’:linear models for panel data (Version 2.6-2).https://cran.r-project.org/package=plm
+#' Bates, D. et al. (2023), Package ‘lme4’: Linear Mixed-Effects Models using 'Eigen' and S4 (Version 1.1-32). https://github.com/lme4/lme4/
+#' @examples
+#' library(plm)
+#' data("Grunfeld", package = "plm") ###use the models from plm package (Croissant Y. et al, 2022: pg.4):
+#' pooledOLS=plm(inv ~ value + capital, data = Grunfeld, model="pooling")
+#' resultsMatrix(pooledOLS)
+#' library(lmtest)
+#' ols_corrected=coeftest(pooledOLS, vcov = vcovSCC(pooledOLS, method="arellano", type="HC3", cluster = "group"))
+#' resultsMatrix(ols_corrected, "pvalue", x.coeftest=TRUE)
+#' data("Crime", package = "plm") ###use the models from plm package (Croissant Y. et al, 2022: pg.97):
+#' FE2SLS=plm(lcrmrte ~ lprbarr + lpolpc + lprbconv + lprbpris + lavgsen + ldensity + lwcon + lwtuc + lwtrd + region + factor(year) | . - lprbarr - lpolpc + ltaxpc + lmix, data = Crime, model = "within")
+#' resultsMatrix(FE2SLS, "pvalue", 3)
+#' library(lme4)
+#' library(boot)
+#' set.seed(404)
+#' beta0=-1.4
+#' beta1=0.1
+#' age=sample(18:40, 100, replace=T)
+#' gender=sample(0:1, 100, replace=T)
+#' eduCat=sample(1:3, 100, replace=T)
+#' groupId=sample(1:10, 100, replace=T)
+#' prob=exp(beta0 + beta1 * age) / (1 + exp(beta0 + beta1 * age))
+#' WLB=rbinom(n=100, size=1, prob=prob)
+#' dataTest=as.data.frame(cbind(WLB, age, gender, eduCat, groupId))
+#' regression.WLB=glmer(WLB ~ age + factor(gender) + I(eduCat==1) + I(eduCat==3) + (1 | groupId), data = dataTest, family = binomial, control=glmerControl(optimizer="bobyqa"), nAGQ = 0)
+#' resultsMatrix(regression.WLB) #returns the coefficient and standard error, 4 decimals
+#' resultsMatrix(regression.WLB, "pvalue", 2) #returns the coefficient and p-value, 2 decimals
+#' ###to return (tstat/pvalues based on) bootstrapped standard errors:
+#' FUN <- function(fit) {
+#'   return(fixef(fit))
+#' }
+#' bootStdErr=bootMer(regression.WLB, FUN=FUN, nsim=10)
+#' resultsMatrix(regression.WLB,bRes=bootStdErr) #returns the coefficient and bootstrapped standard error, 4 decimals
+#' resultsMatrix(regression.WLB,"tstat", 3, bootStdErr) #returns the coefficient and t stat based on bootstrapped standard error, 3 decimals
+#' #***, **, * represent statistical significance at 1%, 5%, and 10%, respectively.
+
+
+resultsMatrix=function(x,z="stderr",decim=4, bRes, x.coeftest=FALSE)
+{
+  if(x.coeftest==FALSE){
+    results=as.data.frame(matrix("",nrow=nrow(summary(x)$coefficients),ncol=1))
+    coefficient=round(summary(x)$coefficients[,1],decim)
+    if(missing(bRes)){
+      standardErr=round(summary(x)$coefficients[,2],decim)
+    } else {
+      standardErr=round(apply(bRes$t, 2, sd),decim)
+    }
+    tstat=round((coefficient/standardErr),decim)
+    pvalue=round(pnorm(q=abs(coefficient/standardErr), lower.tail = FALSE)*2,decim)
+    sig=c()
+    for(i in 1:length(pvalue))
+    {
+      if(pvalue[i]<0.01)
+      {
+        sig[i]=paste("***")
+      } else {
+        if(pvalue[i]<0.05)
+        {
+          sig[i]=paste("**")
+        } else {
+          if(pvalue[i]<0.1)
+          {
+            sig[i]=paste("*")
+          } else {
+            sig[i]=paste("")
+          }
+        }
+      }
+    }
+    if(z==c("stderr")){
+      for(i in 1:nrow(summary(x)$coefficients))
+      {
+        results[i,1]=paste0(coefficient[i], sig[i], " (" ,standardErr[i], ")")
+      }
+    } else {
+      if (z==c("tstat")){
+        for(i in 1:nrow(summary(x)$coefficients))
+        {
+          results[i,1]=paste0(coefficient[i], sig[i], " (" ,tstat[i], ")")
+        }
+      } else {
+        if (z==c("pvalue")){
+          for(i in 1:nrow(summary(x)$coefficients))
+          {
+            results[i,1]=paste0(coefficient[i], sig[i], " (" ,pvalue[i], ")")
+          }
+        }
+      }
+    }
+    rownames(results)=rownames(summary(x)$coefficients)
+  } else {
+    x=as.data.frame(x[,1:4])
+    results=as.data.frame(matrix("",nrow=nrow(x),ncol=1))
+    coefficient=round(x[,1],decim)
+    standardErr=round(x[,2],decim)
+    tstat=round(x[,3],decim)
+    pvalue=round(x[,4],decim)
+    sig=c()
+    for(i in 1:length(pvalue))
+    {
+      if(pvalue[i]<0.01)
+      {
+        sig[i]=paste("***")
+      } else {
+        if(pvalue[i]<0.05)
+        {
+          sig[i]=paste("**")
+        } else {
+          if(pvalue[i]<0.1)
+          {
+            sig[i]=paste("*")
+          } else {
+            sig[i]=paste("")
+          }
+        }
+      }
+    }
+    if(z==c("stderr")){
+      for(i in 1:nrow(x))
+      {
+        results[i,1]=paste0(coefficient[i], sig[i], " (" ,standardErr[i], ")")
+      }
+    } else {
+      if (z==c("tstat")){
+        for(i in 1:nrow(x))
+        {
+          results[i,1]=paste0(coefficient[i], sig[i], " (" ,tstat[i], ")")
+        }
+      } else {
+        if (z==c("pvalue")){
+          for(i in 1:nrow(x))
+          {
+            results[i,1]=paste0(coefficient[i], sig[i], " (" ,pvalue[i], ")")
+          }
+        }
+      }
+    }
+    rownames(results)=rownames(x)
+  }
+  if(missing(bRes)){
+    colnames(results)=c(paste0("Coefficient (", z, ")" ))
+  } else {
+    colnames(results)=c(paste0("Coefficient (bootstrapped ", z, ")" ))
+  }
+  results
+}
