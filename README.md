@@ -1,22 +1,17 @@
-README.md
-================
-Marina FERENT
-2023-04-21
-
 # regrExport: Results and goodness of fit tables for lm, plm, and glmer models
 
 Functions that ease the reporting stage of research projects that use
 lm, plm, coeftest, or glmer models.
 
-resultsMatrix() - Coefficient, significance stars, and (bootstrapped)
+*resultsMatrix()* - Coefficient, significance stars, and (bootstrapped)
 sandard error (t-statistic, or p-value) are reported according to social
 sciences standards.
 
-goodnessFitMatrixMLM() - Provides a comprehensive table of goodness of
+*goodnessFitMatrixMLM()* - Provides a comprehensive table of goodness of
 fit measures for glmer mixed effects logit models, such as random
 intercept, ICC, AIC, BIC, logLik, deviance, PCV, and R^2GLMM.
 
-diagTestMatrixPLM() - Provides a table of diagnostic tests for panel
+*diagTestMatrixPLM()* - Provides a table of diagnostic tests for panel
 linear models - F-test, Hausman test, B-P/LM test of independence,
 Pasaran CD test of independence, Breusch-Godfrey/Wooldridge test for
 serial correlation in panel models, and Breusch-Pagan test for
@@ -29,19 +24,15 @@ value, and also the decision of the test.
 library(devtools)
 ```
 
-    ## Loading required package: usethis
-
 ``` r
 install_github("marinaferent/regrExport")
 ```
 
-    ## Skipping install of 'regrExport' from a github remote, the SHA1 (ea18807d) has not changed since last install.
-    ##   Use `force = TRUE` to force installation
-
 ## Usage
 
-Some examples are provided below. Suitable for R markdown generated
-files. Also ideal for export in .csv files for storage and future use.
+Some examples are provided below. 
+Ideal for export in .csv files for storage and future use. Suitable for R markdown generated
+files.
 
 **resultsMatrix()** - Exports lm, plm and glmer regression’s coefficient
 and the statistical measure of preference in parenthesis.
@@ -66,16 +57,6 @@ resultsMatrix(pooledOLS) #returns the coefficient and standard error, 4 decimals
 ``` r
 library(lmtest)
 ```
-
-    ## Loading required package: zoo
-
-    ## 
-    ## Attaching package: 'zoo'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     as.Date, as.Date.numeric
-
 ``` r
 ols_corrected=coeftest(pooledOLS, vcov = vcovSCC(pooledOLS, method="arellano", type="HC3", cluster = "group"))
 resultsMatrix(ols_corrected, "pvalue", x.coeftest=TRUE) #returns the coefficient and pvalue, 4 decimals
@@ -92,8 +73,6 @@ resultsMatrix(ols_corrected, "pvalue", x.coeftest=TRUE) #returns the coefficient
 library(lme4)
 ```
 
-    ## Loading required package: Matrix
-
 ``` r
 library(boot)
 set.seed(404)
@@ -108,8 +87,6 @@ WLB=rbinom(n=100, size=1, prob=prob)
 dataTest=as.data.frame(cbind(WLB, age, gender, eduCat, groupId))
 regression.WLB=glmer(WLB ~ age + factor(gender) + I(eduCat==1) + I(eduCat==3) + (1 | groupId), data = dataTest, family = binomial, control=glmerControl(optimizer="bobyqa"), nAGQ = 0)
 ```
-
-    ## boundary (singular) fit: see help('isSingular')
 
 ``` r
 resultsMatrix(regression.WLB) #returns the coefficient and standard error, 4 decimals
@@ -186,8 +163,6 @@ first.WLB=glmer(formula=WLB ~ age + factor(gender) + I(eduCat==1) + I(eduCat==3)
 goodnessFitMatrixMLM(first.WLB)
 ```
 
-    ## Loading required package: MuMIn
-
     ##                                    V1
     ## Random intercept variance      0.5074
     ## Interclass correlation (ICC)   0.1336
@@ -198,8 +173,6 @@ goodnessFitMatrixMLM(first.WLB)
     ## df.resid                           94
     ## No. observations                  100
     ## No. countries                      10
-    ## 10                                   
-    ## 11
 
 ``` r
 goodnessFitMatrixMLM(first.WLB, decim=2, decim_per=0)
@@ -215,36 +188,12 @@ goodnessFitMatrixMLM(first.WLB, decim=2, decim_per=0)
     ## df.resid                         94
     ## No. observations                100
     ## No. countries                    10
-    ## 10                                 
-    ## 11
 
 To return PCV and R^2GLMM, also provide the null model:
 
 ``` r
 null.WLB=glmer(WLB ~ 1 + (1 | groupId), data = dataTest, family = binomial, control=glmerControl(optimizer="bobyqa"), nAGQ = 0)
-goodnessFitMatrixMLM(first.WLB, null.WLB) #returns PCV, R^2GLMM in relation to null.WLB
-```
-
-    ## Warning: 'r.squaredGLMM' now calculates a revised statistic. See the help page.
-
-    ##                                                         V1
-    ## Random intercept variance                           0.5074
-    ## Interclass correlation (ICC)                        0.1336
-    ## AIC                                                50.5492
-    ## BIC                                                66.1802
-    ## logLik                                            -19.2746
-    ## deviance                                           38.5492
-    ## df.resid                                                94
-    ## Proportion change in variance (PCV)                 19.54%
-    ## Marginal R-squared (R^2_GLMM(m))- Theoretical         5.7%
-    ## Conditional R-squared (R^2_GLMM(c)) - Theoretical    18.3%
-    ## Marginal R-squared (R^2_GLMM(m))- Delta              1.33%
-    ## Conditional R-squared (R^2_GLMM(c)) - Delta          4.28%
-    ## No. observations                                       100
-    ## No. countries                                           10
-
-``` r
-goodnessFitMatrixMLM(first.WLB, null.WLB, 2, 0)
+goodnessFitMatrixMLM(first.WLB, null.WLB, 2, 0) #returns PCV, R^2GLMM in relation to null.WLB, 2 decimals for numbers, 0 decimals for percentage
 ```
 
     ##                                                       V1
@@ -263,7 +212,7 @@ goodnessFitMatrixMLM(first.WLB, null.WLB, 2, 0)
     ## No. observations                                     100
     ## No. countries                                         10
 
-**diagTestMatrixPLM()**- Exports a table of diagnostic tests for panel
+**diagTestMatrixPLM()** - Exports a table of diagnostic tests for panel
 linear regression models: null hypothesis, value, and decision based on
 user-defined significance threshold level.
 
@@ -282,3 +231,19 @@ tests=diagTestMatrixPLM(pooledOLS,FEM=FE, REM=RE)
 #View(tests)
 #***, **, * represent statistical significance at 1%, 5%, and 10%, respectively.
 ```
+
+
+## References
+--- Barton, K. (2023). MuMIn: Multi-Model Inference (version 1.47.5). https://CRAN.R-project.org/package=MuMIn
+
+--- Bates, D. et al. (2023), Package ‘lme4’: Linear Mixed-Effects Models using 'Eigen' and S4 (Version 1.1-32). https://github.com/lme4/lme4/
+
+--- Croissant, Y. et al.(2022), Package ‘plm’:linear models for panel data (Version 2.6-2). https://cran.r-project.org/package=plm
+
+--- Hothorn, T. et al. (2022), Package ‘lmtest’: Testing Linear Regression Models (Version 0.9-40). https://CRAN.R-project.org/package=lmtest
+
+--- Nakagawa, S., and Schielzeth, H. (2013). A general and simple method for obtaining R2 from generalized linear mixed-effects models, Methods in Ecology and Evolution, Vol.4 No.2, 133-142.
+
+--- Nakagawa, S., Johnson, P. C., and Schielzeth, H. (2017). The coefficient of determination R2 and intra-class correlation coefficient from generalized linear mixed-effects models revisited and expanded, Journal of the Royal Society Interface, Vol.14 No.134.
+
+--- Sommet, N., and Morselli, D. (2017). Keep Calm and Learn Multilevel Logistic Modeling: A Simplified Three-Step Procedure Using Stata, R, Mplus, and SPSS. International Review of Social Psychology, Vol.30 No.1, pp.203-218.
