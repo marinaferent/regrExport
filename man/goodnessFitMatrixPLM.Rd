@@ -4,7 +4,7 @@
 \alias{goodnessFitMatrixPLM}
 \title{Table of goodness of fit measures for (panel) linear models models.}
 \usage{
-goodnessFitMatrixPLM(x, decim = 4, decim_per = 2)
+goodnessFitMatrixPLM(x, decim = 4, decim_per = 2, fixed = FALSE)
 }
 \arguments{
 \item{x}{An object of class lm, plm.}
@@ -12,6 +12,8 @@ goodnessFitMatrixPLM(x, decim = 4, decim_per = 2)
 \item{decim}{Specifies the number of decimals to display. The default is 4.}
 
 \item{decim_per}{Specifies the number of decimals to display in case of percent results. The default is 2.}
+
+\item{fixed}{logical. The default is 'FALSE'. If x is a fixed effects model (model="within") use fixed=TRUE.}
 }
 \value{
 An n x 1 matrix with the R-squared, Adjusted R-squared, and F-statistic (p-value).
