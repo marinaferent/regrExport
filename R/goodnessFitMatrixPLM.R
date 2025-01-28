@@ -20,6 +20,7 @@
 
 goodnessFitMatrixPLM=function(x, decim=4, decim_per=2, fixed=FALSE)
 {
+  require(lm)
   require(plm)
   goodnessFit=as.data.frame(matrix("",nrow=3,ncol=1))
 
