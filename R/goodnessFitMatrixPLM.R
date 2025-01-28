@@ -1,6 +1,6 @@
-#' Table of goodness of fit measures for (panel) linear models models.
+#' Table of goodness of fit measures for panel linear models models.
 #'
-#' @param x An object of class lm, plm.
+#' @param x An object of class plm.
 #' @param decim Specifies the number of decimals to display. The default is 4.
 #' @param decim_per Specifies the number of decimals to display in case of percent results. The default is 2.
 #' @param fixed logical. The default is 'FALSE'. If x is a fixed effects model (model="within") use fixed=TRUE.
@@ -20,7 +20,6 @@
 
 goodnessFitMatrixPLM=function(x, decim=4, decim_per=2, fixed=FALSE)
 {
-  require(lm)
   require(plm)
   goodnessFit=as.data.frame(matrix("",nrow=3,ncol=1))
 
